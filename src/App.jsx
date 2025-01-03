@@ -3,8 +3,8 @@ import './App.css';
 import Quagga from 'quagga'; // Importando o Quagga
 
 function App() {
-
   const [isScanning, setIsScanning] = useState(false); // Estado para controlar o início da leitura
+  const [scannedCode, setScannedCode] = useState(''); // Estado para armazenar o código lido
 
   // Função para iniciar a captura quando o botão for clicado
   const startScanning = () => {
@@ -14,37 +14,41 @@ function App() {
   useEffect(() => {
     if (isScanning) {
       // Inicializando o Quagga para captura de código de barras ou QR Code
-      Quagga.init({
-        inputStream: {
-          type: 'LiveStream',  // Usando a câmera
-          target: '#barcode-scanner',  // Referência ao elemento para mostrar a câmera
-        },
-        decoder: {
-          readers: ['qr_reader', 'code_128_reader'], // Adicionando leitores de QR e código de barras
-        },
-        locator: {
-          halfSample: true, // Melhorar a precisão da detecção
-          patchSize: 'medium', // Tamanho da área de análise
-          debug: {
-            drawBoundingBox: true, // Desenha a caixa ao redor do código
-            showFrequency: true, // Mostra a frequência da detecção
-            drawScanline: true, // Desenha as linhas de leitura (scanlines)
-            showPattern: true, // Exibe o padrão de leitura (ex: linhas horizontais ou verticais)
+      Quagga.init(
+        {
+          inputStream: {
+            type: 'LiveStream', // Usando a câmera
+            target: '#barcode-scanner', // Referência ao elemento para mostrar a câmera
+          },
+          decoder: {
+            readers: ['qr_reader', 'code_128_reader'], // Adicionando leitores de QR e código de barras
+          },
+          locator: {
+            halfSample: true, // Melhorar a precisão da detecção
+            patchSize: 'medium', // Tamanho da área de análise
+            debug: {
+              drawBoundingBox: true, // Desenha a caixa ao redor do código
+              showFrequency: true, // Mostra a frequência da detecção
+              drawScanline: true, // Desenha as linhas de leitura (scanlines)
+              showPattern: true, // Exibe o padrão de leitura (ex: linhas horizontais ou verticais)
+            },
           },
         },
-      }, (err) => {
-        if (err) {
-          console.error(err);
-          return;
+        (err) => {
+          if (err) {
+            console.error(err);
+            return;
+          }
+
+          // Aguardando o Quagga estar pronto para capturar
+          Quagga.onDetected((result) => {
+            console.log('QR Code detectado:', result.codeResult.code);
+            setScannedCode(result.codeResult.code); // Atualiza o estado com o código detectado
+          });
+
+          Quagga.start(); // Inicia a captura
         }
-
-        // Aguardando o Quagga estar pronto para capturar
-        Quagga.onDetected((result) => {
-          console.log('QR Code detectado:', result.codeResult.code);
-        });
-
-        Quagga.start();  // Inicia a captura
-      });
+      );
     }
 
     return () => {
@@ -63,9 +67,24 @@ function App() {
       </button>
 
       {isScanning ? (
-        <div id="barcode-scanner" style={{ width: '100%', height: '450px'}}></div>
+        <div id="barcode-scanner" style={{ width: '100%', height: '450px' }}></div>
       ) : (
-        <div style={{ width: '100%', height: '450px'}}></div>
+        <div style={{ width: '100%', height: '450px' }}></div>
+      )}
+
+      {/* Div para exibir o código lido */}
+      {scannedCode && (
+        <div
+          style={{
+            marginTop: '20px',
+            padding: '10px',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+            backgroundColor: '#f9f9f9',
+          }}
+        >
+          <strong>Código lido:</strong> {scannedCode}
+        </div>
       )}
     </>
   );
