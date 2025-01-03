@@ -6,73 +6,78 @@ function App() {
   const [isScanning, setIsScanning] = useState(false); // Estado para controlar o início da leitura
   const [scannedCode, setScannedCode] = useState(''); // Estado para armazenar o código lido
 
-  // Função para iniciar a captura quando o botão for clicado
   const startScanning = () => {
     setIsScanning(true);
   };
 
   useEffect(() => {
     if (isScanning) {
-      // Inicializando o Quagga para captura de código de barras ou QR Code
       Quagga.init(
         {
           inputStream: {
-            type: 'LiveStream', // Usando a câmera
-            target: '#barcode-scanner', // Referência ao elemento para mostrar a câmera
+            name: 'Live',
+            type: 'LiveStream',
+            target: document.querySelector('#barcode-scanner'),
+            constraints: {
+              facingMode: 'environment', // Usar a câmera traseira
+            },
           },
           decoder: {
-            readers: ['qr_reader', 'code_128_reader'], // Adicionando leitores de QR e código de barras
+            readers: ['code_128_reader', 'ean_reader', 'ean_8_reader'], // Adicionar tipos de códigos comuns
           },
           locator: {
-            halfSample: true, // Melhorar a precisão da detecção
-            patchSize: 'medium', // Tamanho da área de análise
-            debug: {
-              drawBoundingBox: true, // Desenha a caixa ao redor do código
-              showFrequency: true, // Mostra a frequência da detecção
-              drawScanline: true, // Desenha as linhas de leitura (scanlines)
-              showPattern: true, // Exibe o padrão de leitura (ex: linhas horizontais ou verticais)
-            },
+            patchSize: 'medium',
+            halfSample: true,
+          },
+          debug: {
+            drawBoundingBox: true,
+            showFrequency: true,
+            drawScanline: true, // Mostra as linhas guias (scanlines)
           },
         },
         (err) => {
           if (err) {
-            console.error(err);
+            console.error('Erro ao inicializar o Quagga:', err);
             return;
           }
 
-          // Aguardando o Quagga estar pronto para capturar
-          Quagga.onDetected((result) => {
-            console.log('QR Code detectado:', result.codeResult.code);
-            setScannedCode(result.codeResult.code); // Atualiza o estado com o código detectado
-          });
-
-          Quagga.start(); // Inicia a captura
+          console.log('Quagga iniciado com sucesso.');
+          Quagga.start();
         }
       );
+
+      Quagga.onDetected((result) => {
+        console.log('Código detectado:', result.codeResult.code);
+        setScannedCode(result.codeResult.code);
+      });
     }
 
     return () => {
       if (isScanning) {
-        // Parar o Quagga quando o componente for desmontado ou se o estado mudar
         Quagga.stop();
       }
     };
   }, [isScanning]);
 
   return (
-    <>
-      {/* Botão para iniciar a leitura do QR Code */}
-      <button onClick={startScanning} style={{ padding: '10px 20px', fontSize: '16px', marginTop: '20px' }}>
-        Ler QR Code
+    <div style={{ textAlign: 'center', marginTop: '20px' }}>
+      <button
+        onClick={startScanning}
+        style={{ padding: '10px 20px', fontSize: '16px', marginBottom: '20px' }}
+      >
+        Iniciar Leitura
       </button>
 
-      {isScanning ? (
-        <div id="barcode-scanner" style={{ width: '100%', height: '450px' }}></div>
-      ) : (
-        <div style={{ width: '100%', height: '450px' }}></div>
-      )}
+      <div
+        id="barcode-scanner"
+        style={{
+          width: '100%',
+          height: '450px',
+          border: '1px solid #ddd',
+          backgroundColor: '#f9f9f9',
+        }}
+      ></div>
 
-      {/* Div para exibir o código lido */}
       {scannedCode && (
         <div
           style={{
@@ -80,13 +85,13 @@ function App() {
             padding: '10px',
             border: '1px solid #ddd',
             borderRadius: '4px',
-            backgroundColor: '#f9f9f9',
+            backgroundColor: '#f0f0f0',
           }}
         >
-          <strong>Código lido:</strong> {scannedCode}
+          <strong>Código detectado:</strong> {scannedCode}
         </div>
       )}
-    </>
+    </div>
   );
 }
 
