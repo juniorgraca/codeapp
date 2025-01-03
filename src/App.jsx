@@ -23,7 +23,7 @@ function App() {
             },
           },
           decoder: {
-            readers: ['code_128_reader', 'ean_reader', 'ean_8_reader'], // Adicionar tipos de códigos comuns
+            readers: ['qr_reader'], // Configurando para leitura apenas de QR Codes
           },
           locator: {
             patchSize: 'medium',
@@ -47,7 +47,7 @@ function App() {
       );
 
       Quagga.onDetected((result) => {
-        console.log('Código detectado:', result.codeResult.code);
+        console.log('QR Code detectado:', result.codeResult.code);
         setScannedCode(result.codeResult.code);
       });
     }
@@ -88,7 +88,7 @@ function App() {
             backgroundColor: '#f0f0f0',
           }}
         >
-          <strong>Código detectado:</strong> {scannedCode}
+          <strong>QR Code detectado:</strong> {scannedCode}
         </div>
       )}
     </div>
